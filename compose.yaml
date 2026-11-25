@@ -10,6 +10,10 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
       CORS_ORIGINS: "${CORS_ORIGINS:?Set CORS_ORIGINS in .env}"
+      JWT_SECRET_KEY: "${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env}"
+    command: >
+      sh -c "alembic upgrade head"
+
     depends_on: &api_dependencies
       db:
         condition: service_healthy
@@ -84,7 +88,7 @@ services:
     volumes:
       - ./tests:/code/tests:ro
       - ./pytest.ini:/code/pytest.ini:ro
-    command: ["python", "-m", "pytest"]
+    command: ["python", "-m", "pytest", "-s"]
     depends_on:
       test-db:
         condition: service_healthy
