@@ -81,3 +81,81 @@
 
 - A standard browser rule controlling requests between different origins.
 
+## JWT-Authentication (JSON Web Token Authentication)
+
+### JWT
+
+- A JSON Web Token (JWT) is a compact string that carries claims about an identity or request.
+
+### Claim
+
+- A claim is a named piece of information inside a token.
+
+### Authentication
+
+- Authentication checks who is making the request.
+
+### Authorization
+
+- Authorization checks what that person or service is allowed to do.
+
+### Access Token
+
+- An access token is a credential sent with requests to an API.
+
+### Refresh Token
+
+- A refresh token lets the client request a fresh access token without another password prompt.
+
+### HS256
+
+- HS256 uses one shared secret to create and verify a token's signature.
+
+### Secret Key
+
+- A secret key is random private data the server uses to sign and verify HS256 tokens.
+
+### Password hashing
+
+- Password hashing turns a password into a stored value that can be checked without storing the original.
+
+### Argon2
+
+- Argon2 is a password hash designed to make repeated guessing expensive.
+
+### Salt
+
+- A salt is random data added by the password hasher so identical passwords produce different hashes.
+
+### OAuth 2.0
+
+- OAuth 2.0 defines how an application can obtain limited access to a protected resource.
+
+### Protected route
+
+- A protected route checks credentials or permissions before returning private information or performing an action.
+
+### ID token
+
+- An ID token tell a client application who signed in.
+
+### OAuth2PasswordBearer
+
+- A FastAPI dependency that reads a bearer token from the request and describes its scheme to OpenAPI (Swagger)
+
+### sub, exp
+
+- These claims name the token's subject and the time after which it expires.
+
+### iss, aud
+
+- These claims identify who issued the token and which API should accept it.
+
+
+
+
+
+
+
+
+

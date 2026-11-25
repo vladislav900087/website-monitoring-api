@@ -7,5 +7,6 @@ class Settings(BaseSettings):
     celery_broker_url: str
     celery_result_backend: str
     cors_origins: list[str]
+    jwt_secret_key: str
 
 settings = Settings()
