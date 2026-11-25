@@ -1,0 +1,104 @@
+services:
+  api:
+    build: .
+    image: backend-local:dev
+    ports:
+      - "8000:8000"
+    environment: &app_environment
+      DATABASE_URL: "postgresql+psycopg://app:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/app"
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      CORS_ORIGINS: "${CORS_ORIGINS:?Set CORS_ORIGINS in .env}"
+    depends_on: &api_dependencies
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  db:
+    image: postgres:18.7
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+      POSTGRES_DB: app
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck: &postgres_health
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:8.10.3
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  worker:
+    image: backend-local:dev
+    pull_policy: never
+    command: ["celery", "-A", "app.tasks:celery_app", "worker", "--loglevel=INFO", "--concurrency=2"]
+    environment: *app_environment
+    depends_on: *api_dependencies
+  beat:
+    image: backend-local:dev
+    pull_policy: never
+    command: ["celery", "-A", "app.tasks:celery_app", "beat", "--loglevel=INFO", "--schedule=/beat/celerybeat-schedule"]
+    environment: *app_environment
+    volumes:
+      - beat_data:/beat
+    depends_on:
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+  test-db:
+    profiles: ["test"]
+    image: postgres:18.7
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: app_test
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck: *postgres_health
+  tests:
+    profiles: ["test"]
+    image: backend-local:dev
+    pull_policy: never
+    environment:
+      <<: *app_environment
+      DATABASE_URL: postgresql+psycopg://test:test@test-db:5432/app_test
+      CORS_ORIGINS: '["http://localhost:5173"]'
+    volumes:
+      - ./tests:/code/tests:ro
+      - ./pytest.ini:/code/pytest.ini:ro
+    command: ["python", "-m", "pytest"]
+    depends_on:
+      test-db:
+        condition: service_healthy
+volumes:
+  postgres_data:
+  redis_data:
+  beat_data:
+
+
+
+
+
+
+
+
+
+
