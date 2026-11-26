@@ -4,7 +4,6 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 import app.models
 from app.database.base import Base
-from app.database.session import engine
 from app.config.settings import settings
 
 from alembic import context
@@ -24,7 +23,7 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 target_metadata = Base.metadata
 
-if context.is_offline_mode():
+'''if context.is_offline_mode():
     context.configure(url=engine.url, target_metadata=target_metadata)
     with context.begin_transaction():
         context.run_migrations()
@@ -32,7 +31,7 @@ else:
     with engine.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
-            context.run_migrations()
+            context.run_migrations()'''
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -54,7 +53,7 @@ def run_migrations_offline() -> None:
     """
     url = config.get_main_option("sqlalchemy.url")
 
-    config.set_main_option(url, settings.database_url)
+    config.set_main_option("sqlalchemy.url", settings.database_url)
     context.configure(
         url=url,
         target_metadata=target_metadata,
