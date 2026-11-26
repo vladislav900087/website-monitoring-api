@@ -1,0 +1,59 @@
+name: Backend CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist_credentials: false
+      - name: Build and test
+        run: |
+          cp .env.example .env
+          docker compose --profile test config --quiet
+          docker compose --profile test build
+          docker compose run --rm tests
+      - name: Verify migrations against fresh PostgreSQL
+        run: |
+          docker compose up -d --wait db
+          docker compose run --rm --no-deps -v .:/code api alembic upgrade head
+          docker compose run --rm --no-deps -v .:/code api alembic check
+      - name: Show database logs on failure
+        if: ${{ failure() }}
+        run: docker compose --profile test logs db test-db
+
+  publish:
+    name: Publish backend image
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist_credentials: false
+      - name: Build and publish to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}"
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker build -t "$image" --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" .
+          docker push "$image"
+          
+
+
+
+
