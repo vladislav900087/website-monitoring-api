@@ -5,6 +5,7 @@ from sqlalchemy import pool
 import app.models
 from app.database.base import Base
 from app.database.session import engine
+from app.config.settings import settings
 
 from alembic import context
 
@@ -52,6 +53,8 @@ def run_migrations_offline() -> None:
 
     """
     url = config.get_main_option("sqlalchemy.url")
+
+    config.set_main_option(url, settings.database_url)
     context.configure(
         url=url,
         target_metadata=target_metadata,
