@@ -19,7 +19,7 @@ jobs:
           persist_credentials: false
       - name: Build and test
         run: |
-          cp env.example .env
+          cp .env.example .env
           docker compose --profile test config --quiet
           docker compose --profile test build
           docker compose run --rm tests
