@@ -12,7 +12,7 @@ services:
       CORS_ORIGINS: "${CORS_ORIGINS:?Set CORS_ORIGINS in .env}"
       JWT_SECRET_KEY: "${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in .env}"
     command: >
-      sh -c "alembic upgrade head"
+      sh -c "alembic upgrade head && fastapi run app/main.py --port 8000"
 
     depends_on: &api_dependencies
       db:
